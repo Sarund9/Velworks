@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Velworks", "Velworks\Velworks.csproj", "{D16FB191-AC93-4AA6-ADF7-59C00B653024}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.csproj", "{FF32CB5F-4513-41D7-8EC5-9DB47A30351A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D16FB191-AC93-4AA6-ADF7-59C00B653024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D16FB191-AC93-4AA6-ADF7-59C00B653024}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D16FB191-AC93-4AA6-ADF7-59C00B653024}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D16FB191-AC93-4AA6-ADF7-59C00B653024}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF32CB5F-4513-41D7-8EC5-9DB47A30351A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF32CB5F-4513-41D7-8EC5-9DB47A30351A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF32CB5F-4513-41D7-8EC5-9DB47A30351A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF32CB5F-4513-41D7-8EC5-9DB47A30351A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {49908B15-C126-4DE7-8CE8-6E329F80FE5A}
+	EndGlobalSection
+EndGlobal
