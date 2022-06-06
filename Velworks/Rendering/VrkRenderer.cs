@@ -112,7 +112,6 @@ void main()
 
     /*
     TODO:
-    * Source Control
     * HashCache: test
     * Abstract Pipeline Elements
     * Abstraction: Material Shader
@@ -171,6 +170,18 @@ public class MaterialShader
     }
 
     public Shader[] ShaderPasses { get; private set; }
+
+    public class Builder
+    {
+        List<Shader> passes = new List<Shader>();
+        GraphicsDevice gd;
+        public Builder(GraphicsDevice gd)
+        {
+            this.gd = gd;
+        }
+
+        //public 
+    }
 
     //public struct Pass
     //{
