@@ -1,29 +1,25 @@
-﻿name = Simple
+﻿Name = Simple
+Version = 450
 
-$header_end
+#params // declare shader parameters (Opaques)
 
-$version 450 // inserts "#version" into every pass
-$params // declare shader parameters (Opaques)
+#input // declare inputs for next pass
 
-
-$input // declare inputs for next pass
-
-
-$pass vertex vert // vertex has vert_pos, vert_normal, vert_color
+#pass vertex vert // vertex has vert_pos, vert_normal, vert_color
     void vert()
     {
         gl_Position = vec4(vert_pos, 1);
         v2f_color = vert_color;
     }
-$output v2f
+#output v2f
 /*  creates outputs in previous pass (with v2f as prefix).
     also adds inputs to the next pass
 */
     vec4 color
-$pass fragment frag
+#pass fragment frag
     void frag()
     {
         draw_color = v2f_Color;
     }
-$output draw
+#output draw
     vec4 color

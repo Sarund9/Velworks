@@ -154,50 +154,6 @@ void main()
     
 }
 
-public class MaterialShader
-{
-
-    public MaterialShader(GraphicsDevice gd, params ShaderDescription[] passes)
-    {
-        var fac = gd.ResourceFactory;
-
-        ShaderPasses = new Shader[passes.Length];
-
-        for (int i = 0; i < passes.Length; i++)
-        {
-            ShaderPasses[i] = fac.CreateShader(ref passes[i]);
-        }
-    }
-
-    public Shader[] ShaderPasses { get; private set; }
-
-    public class Builder
-    {
-        List<Shader> passes = new List<Shader>();
-        GraphicsDevice gd;
-        public Builder(GraphicsDevice gd)
-        {
-            this.gd = gd;
-        }
-
-        //public 
-    }
-
-    //public struct Pass
-    //{
-    //    public ShaderDescription desc;
-
-    //    public static implicit operator Pass(
-    //        (string src, ShaderStages stage) data) =>
-    //        new Pass { desc = new ShaderDescription(
-    //            data.stage,
-    //            Encoding.UTF8.GetBytes(data.src),
-    //            "main") };
-    //    public static implicit operator ShaderDescription(Pass pass) =>
-    //        pass.desc;
-    //}
-}
-
 
 public struct GpuVertex
 {
