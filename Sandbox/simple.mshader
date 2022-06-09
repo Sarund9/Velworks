@@ -3,7 +3,7 @@ Version = 450
 
 #params // declare shader parameters (Opaques)
 
-#input // declare inputs for next pass
+#input vert // declare inputs for next pass
 
 #pass vertex vert // vertex has vert_pos, vert_normal, vert_color
     void vert()

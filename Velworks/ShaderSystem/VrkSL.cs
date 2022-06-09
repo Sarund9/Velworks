@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Veldrid;
+using Veldrid.SPIRV;
 using Velworks.Rendering;
 
 namespace Velworks.ShaderSystem
@@ -12,6 +13,28 @@ namespace Velworks.ShaderSystem
     public static class VrkSL
     {
         public const string DEFAULT_SHADER_VERSION = "450";
+
+        const string defaultDebug = @"
+Name = 'Test'
+Version = '450'
+#input vrt
+vec3 Pos : VertexPosition
+vec3 Col : VertexColor
+#pass vertex vert
+void vert()
+{
+    gl_Position = vec4(vrtPos, 0);
+    v2fColor = vrtCol;
+}
+#output v2f
+vec3 Color
+#pass fragment frag
+void frag()
+{
+    drawColor = vec4(vrtCol, 1);
+}
+
+";
 
         // Matches all comments
         static Regex r_removeComments = new Regex(@"(\/\/.*)|(\/\*[\S\s]*\*\/)");
@@ -34,8 +57,8 @@ namespace Velworks.ShaderSystem
             if (!preprocMatch.Success)
             {
                 log("[ERROR] - Shader has no processor statements");
-                args.IsFaulted = true;
-                return args;
+                
+                return new ShaderCompilerArgs { };
             }
 
             string shaderName = "";
@@ -79,13 +102,24 @@ namespace Velworks.ShaderSystem
             #endregion
 
             // TODO: Passes
-            
+
             foreach (var match in Iterate(preprocMatch))
             {
+                static int GetIndex(Match match, string source) =>
+                    match.Success ? match.Index : source.Length - 1;
+
                 log($"MATCH: {preprocMatch.Value}");
                 switch (match.Value)
                 {
                     case "#pass":
+                        if (HandlePass(
+                            source, passIndex: match.Index,
+                            nextIndex: GetIndex(match.NextMatch(), source),
+                            log, out var shader))
+                        {
+
+                        }
+                        break;
                     default: break;
                 };
             }
@@ -100,7 +134,74 @@ namespace Velworks.ShaderSystem
 
             // ========================== \\
 
+            static bool HandlePass(
+                string source, int passIndex, int nextIndex, Action<string> log,
+                out ShaderDescription passDescription)
+            {
+                // get end
+                const int PASS_LEN = 5;
+                int len = 0;
+                while (
+                    passIndex + PASS_LEN + len < source.Length &&
+                    !Environment.NewLine.Contains(source[passIndex + PASS_LEN + len]))
+                {
+                    len++;
+                }
+                var parse = source.Substring(passIndex + PASS_LEN, len);
 
+                var args = Utils.Lex(parse)
+                    .ToArray();
+                if (args.Length == 0)
+                {
+                    log("[ERR] - pass statement has no arguments");
+                    passDescription = default;
+                    return false;
+                }
+                var passKind = ParseShaderKind(args[0]);
+                if (passKind == ShaderStages.None)
+                {
+                    log($"[ERR] - unknown pass type '{args[0]}'");
+                    passDescription = default;
+                    return false;
+                }
+                if (args.Length < 2)
+                {
+                    log($"[ERR] - missing main function name");
+                    passDescription = default;
+                    return false;
+                }
+                if (!Utils.IsName(args[1][0]))
+                {
+                    log($"[ERR] - invalid main function name '{args[1]}'");
+                    passDescription = default;
+                    return false;
+                }
+                if (args.Length > 2)
+                {
+                    log($"[ERR] - unexpected argument '{args[2]}' in pass statement");
+                    passDescription = default;
+                    return false;
+                }
+
+                var passCodeStart = passIndex + PASS_LEN + len + Environment.NewLine.Length;
+                var passCode = source.Substring(passCodeStart, nextIndex - passCodeStart);
+                passDescription = new ShaderDescription(
+                    passKind, Encoding.UTF8.GetBytes(passCode), args[1]
+                );
+                return true;
+
+                static ShaderStages ParseShaderKind(string source) => source switch
+                {
+                    "vertex" => ShaderStages.Vertex,
+                    "fragment" => ShaderStages.Fragment,
+                    "compute" => ShaderStages.Compute,
+                    "geometry" => ShaderStages.Geometry,
+                    "tess_control" => ShaderStages.TessellationControl,
+                    "tess_evaluation" => ShaderStages.TessellationEvaluation,
+
+                    _ => ShaderStages.None,
+                };
+            }
 
         }
 
@@ -114,16 +215,42 @@ namespace Velworks.ShaderSystem
         }
     }
 
-    public struct ShaderCompilerArgs
+    public enum ShaderType
     {
-        
-        public bool IsFaulted { get; internal set; }
-        
-        public void LogData(Action writeLine)
+        StandartMaterial = 0,
+        Compute,
+    }
+
+    public readonly struct ShaderCompilerArgs
+    {
+        public readonly ShaderDescription vertex;
+        public readonly ShaderDescription fragment;
+        public readonly bool IsFaulted;
+
+        private ShaderCompilerArgs(ShaderDescription vertex, ShaderDescription fragment, bool isFaulted)
         {
-            
+            this.vertex = vertex;
+            this.fragment = fragment;
+            IsFaulted = isFaulted;
+        }
 
+        public static ShaderCompilerArgs Faulted { get; } = new ShaderCompilerArgs(default, default, true);
 
+        public void LogData(Action<string> writeLine)
+        {
+            writeLine(IsFaulted ?
+                "Faulted Shader"
+                : $"Valid Shader");
+
+            writeLine($"Vertex Function: {vertex.EntryPoint}");
+            writeLine($"Fragment Function: {fragment.EntryPoint}");
+
+            writeLine("== End of Shader == \n");
+        }
+
+        public Shader[] Compile(ResourceFactory factory)
+        {
+            return factory.CreateFromSpirv(vertex, fragment);
         }
     }
 
@@ -282,14 +409,14 @@ namespace Velworks.ShaderSystem
 
     class Utils
     {
+        public static bool IsName(char c) =>
+                char.IsLetterOrDigit(c) || c == '_' || c == '.';
+        public static bool IsString(char c) =>
+            c == '"' || c == '\'' || c == '`';
 
         public static IEnumerable<string> Lex(string text, char commentChar = '\0')
         {
-            static bool IsName(char c) =>
-                char.IsLetterOrDigit(c) || c == '_' || c == '.';
-            static bool IsString(char c) =>
-                c == '"' || c == '\'' || c == '`';
-
+            
             for (int i = 0; i < text.Length; i++)
             {
                 // Skip Whitespace
