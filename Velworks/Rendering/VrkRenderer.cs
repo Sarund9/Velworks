@@ -6,9 +6,12 @@ using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.SPIRV;
 using Veldrid.StartupUtilities;
+using Velworks.Collections;
 
 public class VrkRenderer
 {
+    const int MAX_PIPELINES = 64;
+    
     Sdl2Window window;
     GraphicsDevice device;
     List<RenderPass> renderStack = new List<RenderPass>();
@@ -16,11 +19,13 @@ public class VrkRenderer
     ResourceFactory factory;
 
     CommandList cmd;
-    Pipeline pipeline;
+    
+    HashCache<GraphicsPipelineDescription, Pipeline> pipelineCache;
 
     // TESTING
     Mesh testMesh;
-    
+    MaterialShader testMaterial;
+
     #region DEBUG
 
     private const string VertexCode = @"
@@ -71,43 +76,18 @@ void main()
         };
 
         testMesh = new Mesh(device, verts, indexes);
+        testMaterial = new MaterialShader
+            .Builder(device, "test")
+            .Vertex(VertexCode)
+            .Fragment(FragmentCode)
+            //.FillMode(PolygonFillMode.Wireframe)
+            .Create();
 
-        // Create Vertices
-
-        var shDescV = ShaderFrom(VertexCode, ShaderStages.Vertex);
-        var shDescF = ShaderFrom(FragmentCode, ShaderStages.Fragment);
-        var shaders = factory.CreateFromSpirv(shDescV, shDescF);
-        
         // Create pipeline
-        GraphicsPipelineDescription pipelineDescription = new GraphicsPipelineDescription
-        {
-            // from ??
-            BlendState = BlendStateDescription.SingleOverrideBlend,
-            // from MaterialShader
-            DepthStencilState = new DepthStencilStateDescription(
-                depthTestEnabled: true,
-                depthWriteEnabled: true,
-                comparisonKind: ComparisonKind.LessEqual),
-            // from MaterialShader
-            RasterizerState = new RasterizerStateDescription(
-                cullMode: FaceCullMode.Back,
-                fillMode: PolygonFillMode.Solid,
-                frontFace: FrontFace.Clockwise,
-                depthClipEnabled: true,
-                scissorTestEnabled: false),
-            // TEMP: Always the same
-            PrimitiveTopology = PrimitiveTopology.TriangleStrip,
-            // from ??
-            ResourceLayouts = Array.Empty<ResourceLayout>(),
-            // from ??
-            ShaderSet = new ShaderSetDescription(
-                vertexLayouts: new VertexLayoutDescription[] { GpuVertex.Layout() },
-                shaders: shaders),
-            // from ??
-            Outputs = device.SwapchainFramebuffer.OutputDescription
-        };
+        pipelineCache
+            = new HashCache<GraphicsPipelineDescription, Pipeline>(
+                factory.CreateGraphicsPipeline, MAX_PIPELINES);
 
-        pipeline = factory.CreateGraphicsPipeline(pipelineDescription);
     }
 
     /*
@@ -115,10 +95,8 @@ void main()
     * HashCache: test
     * Abstract Pipeline Elements
     * Abstraction: Material Shader
-    * Shader System
-    * Asset Manager
-    * Shader Loader
-    * 
+    * Default ECS
+
     * Render Graph System
     * Render Graph Asset
      */
@@ -131,6 +109,8 @@ void main()
         // TESTING
         cmd.SetVertexBuffer(0, testMesh.VertexBuffer);
         cmd.SetIndexBuffer(testMesh.IndexBuffer, testMesh.IndexFormat);
+
+        var pipeline = pipelineCache.Get(CreatePipelineDesc(device, testMesh, testMaterial));
         cmd.SetPipeline(pipeline);
 
         cmd.DrawIndexed(
@@ -152,6 +132,28 @@ void main()
                 Encoding.UTF8.GetBytes(src),
                 "main");
     
+    // TODO: Move to Utility Class
+
+    static GraphicsPipelineDescription CreatePipelineDesc(GraphicsDevice device, Mesh mesh, MaterialShader matshader)
+    {
+        return new GraphicsPipelineDescription
+        {
+            // from ??
+            BlendState = BlendStateDescription.SingleOverrideBlend,
+            DepthStencilState = matshader.DepthStencilState,
+            RasterizerState = matshader.RasterizerState,
+            // TEMP: Always the same
+            PrimitiveTopology = PrimitiveTopology.TriangleStrip,
+            // from ??
+            ResourceLayouts = Array.Empty<ResourceLayout>(),
+            ShaderSet = new ShaderSetDescription(
+                vertexLayouts: new VertexLayoutDescription[] { GpuVertex.Layout() },
+                shaders: matshader.ShaderPasses),
+            // from ??
+            Outputs = device.SwapchainFramebuffer.OutputDescription
+        };
+    }
+
 }
 
 

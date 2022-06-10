@@ -1,4 +1,6 @@
 ﻿namespace Velworks.Rendering;
+
+using System.Text;
 using Veldrid;
 using Veldrid.SPIRV;
 using Velworks.ShaderSystem;
@@ -6,27 +8,142 @@ using Velworks.ShaderSystem;
 public class MaterialShader
 {
 
-    public MaterialShader(GraphicsDevice gd, ShaderCompilerArgs args, string name)
+    public MaterialShader(GraphicsDevice gd,
+        ShaderDescription vert, ShaderDescription frag, string shaderName,
+        DepthStencilStateDescription depthStencilState,
+        RasterizerStateDescription rasterizerState)
     {
         GraphicsDevice = gd;
-
-        ShaderPasses = args.Compile(gd.ResourceFactory);
-
-        Name = name;
-    }
-    public MaterialShader(GraphicsDevice gd, ShaderDescription vert, ShaderDescription frag, string name)
-    {
-        GraphicsDevice = gd;
-
         ShaderPasses = gd.ResourceFactory.CreateFromSpirv(vert, frag);
-
-        Name = name;
+        Name = shaderName;
+        DepthStencilState = depthStencilState;
+        RasterizerState = rasterizerState;
     }
 
     public GraphicsDevice GraphicsDevice { get; private set; }
     public Shader[] ShaderPasses { get; private set; }
     public string Name { get; private set; }
+    public DepthStencilStateDescription DepthStencilState { get; }
+    public RasterizerStateDescription RasterizerState { get; }
 
+    public class Builder
+    {
+        readonly GraphicsDevice gd;
+        string shaderName;
+
+        string? vertexCode;
+        string? vertexEntryPoint;
+        string? fragmentCode;
+        string? fragmentEntryPoint;
+
+        // from MaterialShader
+        DepthStencilStateDescription depthStencilState = new DepthStencilStateDescription(
+            depthTestEnabled: true,
+            depthWriteEnabled: true,
+            comparisonKind: ComparisonKind.LessEqual);
+
+        // from MaterialShader
+        RasterizerStateDescription rasterizerState = new RasterizerStateDescription(
+                    cullMode: FaceCullMode.Back,
+                    fillMode: PolygonFillMode.Solid,
+                    frontFace: FrontFace.Clockwise,
+                    depthClipEnabled: true,
+                    scissorTestEnabled: false);
+
+        public Builder(GraphicsDevice gd, string shaderName)
+        {
+            this.gd = gd;
+            this.shaderName = shaderName;
+        }
+
+        #region DEPTH STENCIL
+        public Builder DepthTest(bool enabled)
+        {
+            depthStencilState.DepthTestEnabled = enabled;
+            return this;
+        }
+        public Builder DepthWrite(bool enabled)
+        {
+            depthStencilState.DepthWriteEnabled = enabled;
+            return this;
+        }
+        public Builder DepthComparison(ComparisonKind comp)
+        {
+            depthStencilState.DepthComparison = comp;
+            return this;
+        }
+        #endregion
+
+        #region RASTERIZER
+
+        public Builder CullingMode(FaceCullMode cullMode)
+        {
+            rasterizerState.CullMode = cullMode;
+            return this;
+        }
+
+        public Builder FillMode(PolygonFillMode fillMode)
+        {
+            rasterizerState.FillMode = fillMode;
+            return this;
+        }
+
+        public Builder DrawFace(FrontFace frontFace)
+        {
+            rasterizerState.FrontFace = frontFace;
+            return this;
+        }
+        public Builder DepthClip(bool enabled)
+        {
+            rasterizerState.DepthClipEnabled = enabled;
+            return this;
+        }
+        public Builder ScissorTest(bool enabled)
+        {
+            rasterizerState.ScissorTestEnabled = enabled;
+            return this;
+        }
+
+        #endregion
+
+        public Builder Vertex(string code, string entryPoint = "main")
+        {
+            vertexCode = code;
+            vertexEntryPoint = entryPoint;
+            return this;
+        }
+        public Builder Fragment(string code, string entryPoint = "main")
+        {
+            fragmentCode = code;
+            fragmentEntryPoint = entryPoint;
+            return this;
+        }
+
+        public MaterialShader Create()
+        {
+            if (vertexCode is null)
+                throw new ArgumentNullException("No Vertex Code!");
+            if (vertexEntryPoint is null)
+                throw new ArgumentNullException("No Vertex Entry Point!");
+            if (fragmentCode is null)
+                throw new ArgumentNullException("No Fragment Code!");
+            if (fragmentEntryPoint is null)
+                throw new ArgumentNullException("No Fragment Entry Point!");
+
+            return new MaterialShader(gd,
+                new ShaderDescription(
+                    ShaderStages.Vertex,
+                    Encoding.UTF8.GetBytes(vertexCode),
+                    vertexEntryPoint),
+                new ShaderDescription(
+                    ShaderStages.Fragment,
+                    Encoding.UTF8.GetBytes(fragmentCode),
+                    fragmentEntryPoint),
+                shaderName, depthStencilState, rasterizerState);
+        }
+    }
+
+    #region OLD
     //public class Builder
     //{
     //    readonly List<Shader> passes = new List<Shader>();
@@ -59,8 +176,8 @@ public class MaterialShader
     //    }
 
     //}
+    #endregion
 
-    
 }
 
 

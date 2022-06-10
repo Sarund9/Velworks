@@ -62,7 +62,7 @@ namespace Velworks.Collections
                 throw new ArgumentOutOfRangeException(
                     nameof(capacity) + " should be greater than 0");
             }
-
+            this.capacity = capacity;
         }
 
         public T? AddTryRemove(T key)
