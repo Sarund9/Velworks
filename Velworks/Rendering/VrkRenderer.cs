@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Text;
+using System.Text.RegularExpressions;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.SPIRV;
@@ -100,6 +101,17 @@ void main()
     * Render Graph System
     * Render Graph Asset
      */
+
+    #region APP FLOW
+
+    internal void InitializeRenderSystem()
+    {
+        foreach (var pass in renderStack)
+        {
+            pass.Initialize(this);
+        }
+    }
+
     internal void Draw()
     {
         cmd.Begin();
@@ -126,14 +138,22 @@ void main()
         device.SubmitCommands(cmd);
         device.SwapBuffers();
     }
-    static ShaderDescription ShaderFrom(string src, ShaderStages stage) =>
-            new ShaderDescription(
-                stage,
-                Encoding.UTF8.GetBytes(src),
-                "main");
     
-    // TODO: Move to Utility Class
+    #endregion
 
+    #region RENDER PIPELINE
+
+    public void AddRenderPass(RenderPass pass,
+        int priority)
+    {
+
+        
+
+    }
+
+    #endregion
+
+    // TODO: Move to Utility Class
     static GraphicsPipelineDescription CreatePipelineDesc(GraphicsDevice device, Mesh mesh, MaterialShader matshader)
     {
         return new GraphicsPipelineDescription
@@ -153,9 +173,7 @@ void main()
             Outputs = device.SwapchainFramebuffer.OutputDescription
         };
     }
-
 }
-
 
 public struct GpuVertex
 {
@@ -198,7 +216,25 @@ public struct GpuVertex
 
 public abstract class RenderPass
 {
+    
+    protected abstract string ID { get; }
+    protected abstract IEnumerable<string> GetTags();
 
+    public bool Match(Regex match, bool matchID = true)
+    {
+        return (matchID && match.IsMatch(ID)) ||
+            GetTags().Any(x => match.IsMatch(x));
+    }
+
+
+    public virtual void Initialize(VrkRenderer renderer) { }
+
+    public abstract void Render(
+        RenderContext context, VrkRenderer renderer);
 }
 
+public class RenderContext
+{
+
+}
 

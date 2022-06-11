@@ -10,8 +10,6 @@ namespace Velworks;
 
 public abstract class VelworksApp
 {
-    Sdl2Window window;
-    VrkRenderer renderer;
 
     #region CONSTRUCTOR
     protected VelworksApp(
@@ -20,7 +18,7 @@ public abstract class VelworksApp
         int width = 720, int height = 520,
         WindowState windowState = WindowState.Normal)
     {
-        window = VeldridStartup.CreateWindow(new WindowCreateInfo
+        Window = VeldridStartup.CreateWindow(new WindowCreateInfo
         {
             WindowHeight = height,
             WindowWidth = width,
@@ -28,8 +26,15 @@ public abstract class VelworksApp
             X = x, Y = y,
             WindowInitialState = windowState,
         });
-        renderer = new VrkRenderer(window);
+        Renderer = new VrkRenderer(Window);
     }
+    #endregion
+
+    #region PROPS
+
+    public Sdl2Window Window { get; }
+    public VrkRenderer Renderer { get; }
+
     #endregion
 
     #region STATIC
@@ -51,13 +56,16 @@ public abstract class VelworksApp
     private void Run()
     {
         OnInitialize();
-        while (window.Exists)
+
+        Renderer.InitializeRenderSystem();
+
+        while (Window.Exists)
         {
-            window.PumpEvents();
-            if (!window.Exists)
+            Window.PumpEvents();
+            if (!Window.Exists)
                 break;
             OnUpdate();
-            renderer.Draw();
+            Renderer.Draw();
         }
         OnDeinitialize();
     }
@@ -70,5 +78,10 @@ public abstract class VelworksApp
     protected virtual void OnDeinitialize() { }
 
     #endregion
-}
 
+    #region API
+
+
+
+    #endregion
+}

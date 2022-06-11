@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "id": "RT_in",
+      "type": "Velworks.InputNode",
+      "resourceType": "Velrid.Framebuffer"
+    },
+    {
+      "id": "RT_out",
+      "type": "Velworks.OutputNode",
+      "from": "postProcess"
+    },
+    {
+      "id": "querry_opaques",
+      "type": "Velworks.SceneQuerry",
+      "exclude": [ "transparent" ]
+    },
+    {
+      "id": "drawOpaques",
+      "type": "Velworks.DrawScenePass",
+      "params": {
+        "querry": { "from": "querry_opaques", "var": "querry" },
+        "target": { "from": "RT_in", "var": "target" }
+      }
+    },
+    {
+      "id": "drawSkybox",
+      "type": "Velworks.DrawSkybox",
+      "params": {
+        "target": { "from": "drawOpaques", "var": "target" }
+      }
+    }
+  ]
+}
