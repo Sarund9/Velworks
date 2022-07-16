@@ -1,6 +1,4 @@
-﻿namespace Velworks.Rendering;
-
-using System.Numerics;
+﻿using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Veldrid;
@@ -9,13 +7,15 @@ using Veldrid.SPIRV;
 using Veldrid.StartupUtilities;
 using Velworks.Collections;
 
+namespace Velworks.Rendering;
+
 public class VrkRenderer
 {
     const int MAX_PIPELINES = 64;
     
     Sdl2Window window;
     GraphicsDevice device;
-    List<RenderPass> renderStack = new List<RenderPass>();
+    List<IRenderPass> renderStack = new List<IRenderPass>();
 
     ResourceFactory factory;
 
@@ -23,35 +23,7 @@ public class VrkRenderer
     
     HashCache<GraphicsPipelineDescription, Pipeline> pipelineCache;
 
-    // TESTING
-    Mesh testMesh;
-    MaterialShader testMaterial;
-
-    #region DEBUG
-
-    private const string VertexCode = @"
-#version 450
-layout(location = 0) in vec3 Position;
-layout(location = 1) in vec3 Normal;
-layout(location = 2) in vec4 Color;
-layout(location = 0) out vec4 v2f_Color;
-
-void main()
-{
-    gl_Position = vec4(Position, 1);
-    v2f_Color = Color;
-}";
-
-    private const string FragmentCode = @"
-#version 450
-layout(location = 0) in vec4 v2f_Color;
-layout(location = 0) out vec4 drawColor;
-
-void main()
-{
-    drawColor = v2f_Color;
-}";
-    #endregion
+    RenderContext context = new();
 
     public VrkRenderer(Sdl2Window window)
     {
@@ -61,35 +33,14 @@ void main()
         factory = device.ResourceFactory;
         cmd = factory.CreateCommandList();
 
-        // TESTING
-
-        var verts = new GpuVertex[]
-        {
-            GpuVertex.AtPos(-.75f, .75f, 0).WithColor(.9f, .1f, .1f),
-            GpuVertex.AtPos(.75f, .75f, 0).WithColor(.3f, .8f, .1f),
-            GpuVertex.AtPos(-.75f, -.75f, 0).WithColor(.1f, .3f, .8f),
-            GpuVertex.AtPos(.75f, -.75f, 0).WithColor(0, 0, 0),
-        };
-        
-        var indexes = new ushort[]
-        {
-            0, 1, 2, 3
-        };
-
-        testMesh = new Mesh(device, verts, indexes);
-        testMaterial = new MaterialShader
-            .Builder(device, "test")
-            .Vertex(VertexCode)
-            .Fragment(FragmentCode)
-            //.FillMode(PolygonFillMode.Wireframe)
-            .Create();
-
         // Create pipeline
         pipelineCache
             = new HashCache<GraphicsPipelineDescription, Pipeline>(
                 factory.CreateGraphicsPipeline, MAX_PIPELINES);
 
     }
+
+    public GraphicsDevice Device => device;
 
     /*
     TODO:
@@ -100,11 +51,13 @@ void main()
 
     * Render Graph System
     * Render Graph Asset
+    
+    
      */
 
     #region APP FLOW
 
-    internal void InitializeRenderSystem()
+    internal void InitializeRenderPasses()
     {
         foreach (var pass in renderStack)
         {
@@ -114,47 +67,33 @@ void main()
 
     internal void Draw()
     {
-        cmd.Begin();
-        cmd.SetFramebuffer(device.SwapchainFramebuffer);
-        cmd.ClearColorTarget(0, RgbaFloat.Black);
-
-        // TESTING
-        cmd.SetVertexBuffer(0, testMesh.VertexBuffer);
-        cmd.SetIndexBuffer(testMesh.IndexBuffer, testMesh.IndexFormat);
-
-        var pipeline = pipelineCache.Get(CreatePipelineDesc(device, testMesh, testMaterial));
-        cmd.SetPipeline(pipeline);
-
-        cmd.DrawIndexed(
-            indexCount: 4,
-            instanceCount: 1,
-            indexStart: 0,
-            vertexOffset: 0,
-            instanceStart: 0);
-
-        // TEST END
-
-        cmd.End();
-        device.SubmitCommands(cmd);
-        device.SwapBuffers();
+        foreach (var pass in renderStack)
+        {
+            pass.Render(context, this);
+        }
+        Device.SwapBuffers();
     }
     
     #endregion
 
     #region RENDER PIPELINE
 
-    public void AddRenderPass(RenderPass pass,
-        int priority)
+    public CommandList GetCommandList() =>
+        cmd;
+
+    public void AddRenderPass(IRenderPass pass)
     {
-
-        
-
+        renderStack.Add(pass);
     }
+
+    public Pipeline GetPipeline(Mesh mesh, MaterialShader shader) =>
+        pipelineCache.Get(CreatePipelineDesc(Device, mesh, shader));
 
     #endregion
 
     // TODO: Move to Utility Class
-    static GraphicsPipelineDescription CreatePipelineDesc(GraphicsDevice device, Mesh mesh, MaterialShader matshader)
+    static GraphicsPipelineDescription CreatePipelineDesc(
+        GraphicsDevice device, Mesh mesh, MaterialShader matshader)
     {
         return new GraphicsPipelineDescription
         {
@@ -173,6 +112,11 @@ void main()
             Outputs = device.SwapchainFramebuffer.OutputDescription
         };
     }
+}
+
+public class RenderContext
+{
+
 }
 
 public struct GpuVertex
@@ -214,27 +158,9 @@ public struct GpuVertex
             );
 }
 
-public abstract class RenderPass
-{
-    
-    protected abstract string ID { get; }
-    protected abstract IEnumerable<string> GetTags();
-
-    public bool Match(Regex match, bool matchID = true)
-    {
-        return (matchID && match.IsMatch(ID)) ||
-            GetTags().Any(x => match.IsMatch(x));
-    }
-
-
-    public virtual void Initialize(VrkRenderer renderer) { }
-
-    public abstract void Render(
-        RenderContext context, VrkRenderer renderer);
-}
-
-public class RenderContext
-{
-
-}
+//public bool Match(Regex match, bool matchID = true)
+//{
+//    return (matchID && match.IsMatch(ID)) ||
+//        GetTags().Any(x => match.IsMatch(x));
+//}
 

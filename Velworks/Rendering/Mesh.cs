@@ -9,6 +9,7 @@ public class Mesh : IDisposable
     ushort[]? localIndexes;
 
     GraphicsDevice gd;
+    uint indexCount;
 
     public Mesh(GraphicsDevice gd, GpuVertex[] vertices, ushort[] indexes)
     {
@@ -24,12 +25,15 @@ public class Mesh : IDisposable
         IndexBuffer = gd.ResourceFactory.CreateBuffer(ref indDesc);
         gd.UpdateBuffer(IndexBuffer, 0, indexes);
         this.gd = gd;
+        indexCount = (uint)indexes.Length;
     }
     
     public DeviceBuffer VertexBuffer { get; private set; }
     public DeviceBuffer IndexBuffer { get; private set; }
 
     public IndexFormat IndexFormat => IndexFormat.UInt16;
+
+    public uint IndexCount => indexCount;
 
     public void SetLocalVertexData(GpuVertex[] data)
     {
@@ -50,6 +54,7 @@ public class Mesh : IDisposable
                 BufferUsage.VertexBuffer);
             VertexBuffer = gd.ResourceFactory.CreateBuffer(ref vertDesc);
             gd.UpdateBuffer(VertexBuffer, 0, localVertices);
+            localVertices = null;
         }
         if (localIndexes != null)
         {
@@ -59,6 +64,8 @@ public class Mesh : IDisposable
                 BufferUsage.IndexBuffer);
             IndexBuffer = gd.ResourceFactory.CreateBuffer(ref indDesc);
             gd.UpdateBuffer(IndexBuffer, 0, localIndexes);
+            indexCount = (uint)localIndexes.Length;
+            localIndexes = null;
         }
     }
 

@@ -10,6 +10,8 @@ namespace Velworks;
 
 public abstract class VelworksApp
 {
+    static VelworksApp? s_Instance;
+    public static VelworksApp Instance => s_Instance!;
 
     #region CONSTRUCTOR
     protected VelworksApp(
@@ -41,14 +43,19 @@ public abstract class VelworksApp
     public static void RunApplication<T>(params object[] constructorArgs)
         where T : VelworksApp
     {
-        var instance = Activator.CreateInstance(
+        if (s_Instance is not null)
+        {
+            // Error: Application already created
+            return;
+        }
+        s_Instance = Activator.CreateInstance(
             typeof(T), args: constructorArgs)
             as T;
-        if (instance == null)
+        if (Instance is null)
         {
             throw new Exception("Application Creation Failed!");
         }
-        instance.Run();
+        Instance.Run();
     }
     #endregion
 
@@ -57,7 +64,7 @@ public abstract class VelworksApp
     {
         OnInitialize();
 
-        Renderer.InitializeRenderSystem();
+        Renderer.InitializeRenderPasses();
 
         while (Window.Exists)
         {
