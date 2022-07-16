@@ -1,7 +1,7 @@
 ﻿using Veldrid;
 using Velworks;
 using Velworks.Rendering;
-using Velworks.ShaderSystem;
+using Velworks.Rendering.Passes;
 
 VelworksApp.RunApplication<App>();
 
@@ -11,7 +11,7 @@ class App : VelworksApp
     {
         // Construct Render Pipeline
         Renderer.AddRenderPass(new ClearPass(RgbaFloat.Black));
-        Renderer.AddRenderPass(new TestPass(Renderer.Device));
+        Renderer.AddRenderPass(new HelloSquarePass(Renderer.Device));
 
 
 
