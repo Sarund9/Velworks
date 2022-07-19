@@ -4,9 +4,9 @@ namespace Velworks.Rendering.Passes;
 
 public class HelloSquarePass : IRenderPass
 {
-    // TESTING
-    Mesh testMesh;
-    MaterialShader testMaterial;
+    Framebuffer target;
+    Mesh mesh;
+    MaterialShader material;
 
     #region DEBUG
 
@@ -34,9 +34,8 @@ void main()
 }";
     #endregion
 
-    public HelloSquarePass(GraphicsDevice device)
+    public HelloSquarePass(Framebuffer target, GraphicsDevice device)
     {
-        // TESTING
         var verts = new GpuVertex[]
         {
             GpuVertex.AtPos(-.75f, .75f, 0).WithColor(.9f, .1f, .1f),
@@ -50,29 +49,29 @@ void main()
             0, 1, 2, 3
         };
 
-        testMesh = new Mesh(device, verts, indexes);
-        testMaterial = new MaterialShader
-            .Builder(device, "test")
+        mesh = new Mesh(device, verts, indexes);
+        material = new MaterialShader
+            .Builder(device, "_test_pass_material_")
             .Vertex(VertexCode)
             .Fragment(FragmentCode)
             //.FillMode(PolygonFillMode.Wireframe)
             .Create();
+        this.target = target;
+    }
+
+    public void Dispose()
+    {
 
     }
 
     public void Render(RenderContext context, VrkRenderer renderer)
     {
         var cmd = renderer.GetCommandList();
-
-        cmd.Begin();
-        cmd.SetFramebuffer(renderer.Device.SwapchainFramebuffer);
-
-        // TESTING
-        cmd.DrawMesh(testMesh, testMaterial);
-
-        // TEST END
-        cmd.End();
-        renderer.Device.SubmitCommands(cmd);
+        using (cmd.Scope())
+        {
+            cmd.Standart.SetFramebuffer(target);
+            cmd.DrawMesh(mesh, material);
+        }
+        cmd.SubmitCommand();
     }
 }
-

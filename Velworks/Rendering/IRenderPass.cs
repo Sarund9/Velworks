@@ -1,6 +1,6 @@
 ﻿namespace Velworks.Rendering;
 
-public interface IRenderPass
+public interface IRenderPass : IDisposable
 {
     public void Initialize(VrkRenderer renderer) { }
 

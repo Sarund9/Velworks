@@ -78,8 +78,8 @@ public class VrkRenderer
 
     #region RENDER PIPELINE
 
-    public CommandList GetCommandList() =>
-        cmd;
+    public VrkCommandList GetCommandList() =>
+        new VrkCommandList(this, cmd);
 
     public void AddRenderPass(IRenderPass pass)
     {

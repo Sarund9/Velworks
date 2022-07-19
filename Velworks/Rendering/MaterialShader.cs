@@ -32,18 +32,18 @@ public class MaterialShader
         string shaderName;
 
         string? vertexCode;
-        string? vertexEntryPoint;
+        string vertexEntryPoint = "main";
         string? fragmentCode;
-        string? fragmentEntryPoint;
+        string fragmentEntryPoint = "main";
 
         // from MaterialShader
-        DepthStencilStateDescription depthStencilState = new DepthStencilStateDescription(
+        DepthStencilStateDescription depthStencilState = new(
             depthTestEnabled: true,
             depthWriteEnabled: true,
             comparisonKind: ComparisonKind.LessEqual);
 
         // from MaterialShader
-        RasterizerStateDescription rasterizerState = new RasterizerStateDescription(
+        RasterizerStateDescription rasterizerState = new(
                     cullMode: FaceCullMode.Back,
                     fillMode: PolygonFillMode.Solid,
                     frontFace: FrontFace.Clockwise,
@@ -123,13 +123,9 @@ public class MaterialShader
         {
             if (vertexCode is null)
                 throw new ArgumentNullException("No Vertex Code!");
-            if (vertexEntryPoint is null)
-                throw new ArgumentNullException("No Vertex Entry Point!");
             if (fragmentCode is null)
                 throw new ArgumentNullException("No Fragment Code!");
-            if (fragmentEntryPoint is null)
-                throw new ArgumentNullException("No Fragment Entry Point!");
-
+            
             return new MaterialShader(gd,
                 new ShaderDescription(
                     ShaderStages.Vertex,

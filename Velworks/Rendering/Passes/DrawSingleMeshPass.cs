@@ -2,20 +2,24 @@
 
 namespace Velworks.Rendering.Passes;
 
-public class ClearPass : IRenderPass
+public class DrawSingleMeshPass : IRenderPass
 {
-    RgbaFloat color;
     Framebuffer target;
+    Mesh mesh;
+    MaterialShader material;
 
-    public ClearPass(Framebuffer target, RgbaFloat color)
+    public DrawSingleMeshPass(
+        GraphicsDevice gd, Framebuffer target,
+        Mesh mesh, MaterialShader material)
     {
-        this.color = color;
         this.target = target;
+        this.mesh = mesh;
+        this.material = material;
     }
 
     public void Dispose()
     {
-        
+
     }
 
     public void Render(RenderContext context, VrkRenderer renderer)
@@ -24,11 +28,8 @@ public class ClearPass : IRenderPass
         using (cmd.Scope())
         {
             cmd.Standart.SetFramebuffer(target);
-            cmd.Standart.ClearColorTarget(0, color);
+            cmd.DrawMesh(mesh, material);
         }
         cmd.SubmitCommand();
     }
-
-
 }
-
