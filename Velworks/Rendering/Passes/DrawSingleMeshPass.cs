@@ -2,7 +2,7 @@
 
 namespace Velworks.Rendering.Passes;
 
-public class DrawSingleMeshPass : IRenderPass
+public sealed class DrawSingleMeshPass : IRenderPass
 {
     Framebuffer target;
     Mesh mesh;
@@ -19,7 +19,8 @@ public class DrawSingleMeshPass : IRenderPass
 
     public void Dispose()
     {
-
+        mesh.Dispose();
+        material.Dispose();
     }
 
     public void Render(RenderContext context, VrkRenderer renderer)
@@ -31,5 +32,7 @@ public class DrawSingleMeshPass : IRenderPass
             cmd.DrawMesh(mesh, material);
         }
         cmd.SubmitCommand();
+
+        renderer.ReturnCommandList(cmd);
     }
 }

@@ -75,6 +75,8 @@ public abstract class VelworksApp
             Renderer.Draw();
         }
         OnDeinitialize();
+
+        Renderer.Dispose();
     }
     #endregion
 

@@ -27,6 +27,8 @@ namespace Velworks.Collections
             values = new ValueMemento<TKey>(maxCap);
         }
 
+        public IEnumerable<KeyValuePair<TKey, TResult>> Cached => cache;
+
         public TResult Get(TKey key)
         {
             if (cache.ContainsKey(key))

@@ -5,7 +5,7 @@ using Veldrid;
 using Veldrid.SPIRV;
 using Velworks.ShaderSystem;
 
-public class MaterialShader
+public sealed class MaterialShader : IDisposable
 {
 
     public MaterialShader(GraphicsDevice gd,
@@ -25,6 +25,14 @@ public class MaterialShader
     public string Name { get; private set; }
     public DepthStencilStateDescription DepthStencilState { get; }
     public RasterizerStateDescription RasterizerState { get; }
+
+    public void Dispose()
+    {
+        for (int i = 0; i < ShaderPasses.Length; i++)
+        {
+            ShaderPasses[i].Dispose();
+        }
+    }
 
     public class Builder
     {

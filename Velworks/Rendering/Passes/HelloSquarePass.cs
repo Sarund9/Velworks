@@ -73,5 +73,7 @@ void main()
             cmd.DrawMesh(mesh, material);
         }
         cmd.SubmitCommand();
+
+        renderer.ReturnCommandList(cmd);
     }
 }

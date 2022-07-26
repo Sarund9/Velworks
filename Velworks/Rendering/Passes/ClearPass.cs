@@ -2,7 +2,7 @@
 
 namespace Velworks.Rendering.Passes;
 
-public class ClearPass : IRenderPass
+public sealed class ClearPass : IRenderPass
 {
     RgbaFloat color;
     Framebuffer target;
@@ -27,6 +27,8 @@ public class ClearPass : IRenderPass
             cmd.Standart.ClearColorTarget(0, color);
         }
         cmd.SubmitCommand();
+
+        renderer.ReturnCommandList(cmd);
     }
 
 

@@ -9,17 +9,17 @@ using Velworks.Collections;
 
 namespace Velworks.Rendering;
 
-public class VrkRenderer
+public sealed class VrkRenderer : IDisposable
 {
     const int MAX_PIPELINES = 64;
     
     Sdl2Window window;
     GraphicsDevice device;
-    List<IRenderPass> renderStack = new List<IRenderPass>();
+    List<IRenderPass> renderStack = new(); // TODO: Abstract to RenderGraph class (for multiple renderers)
 
     ResourceFactory factory;
 
-    CommandList cmd;
+    Pool<CommandList> commandListPool;
     
     HashCache<GraphicsPipelineDescription, Pipeline> pipelineCache;
 
@@ -31,7 +31,8 @@ public class VrkRenderer
 
         device = VeldridStartup.CreateGraphicsDevice(window);
         factory = device.ResourceFactory;
-        cmd = factory.CreateCommandList();
+        
+        commandListPool = new Pool<CommandList>(factory.CreateCommandList);
 
         // Create pipeline
         pipelineCache
@@ -72,6 +73,11 @@ public class VrkRenderer
             pass.Render(context, this);
         }
         Device.SwapBuffers();
+
+        //if (commandListPool.CachedCount > 128)
+        //{
+        //    throw new Exception("Command Li");
+        //}    
     }
     
     #endregion
@@ -79,7 +85,10 @@ public class VrkRenderer
     #region RENDER PIPELINE
 
     public VrkCommandList GetCommandList() =>
-        new VrkCommandList(this, cmd);
+        new(this, commandListPool.Get());
+
+    public void ReturnCommandList(VrkCommandList cmd) =>
+        commandListPool.Return(cmd.Standart);
 
     public void AddRenderPass(IRenderPass pass)
     {
@@ -111,6 +120,22 @@ public class VrkRenderer
             // from ??
             Outputs = device.SwapchainFramebuffer.OutputDescription
         };
+    }
+
+    public void Dispose()
+    {
+        foreach (var item in renderStack)
+        {
+            item.Dispose();
+        }
+
+        foreach (var item in commandListPool.Uninstantiated)
+        {
+            item.Dispose();
+        }
+        commandListPool.Clear();
+
+        device.Dispose();
     }
 }
 
