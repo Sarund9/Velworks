@@ -9,6 +9,7 @@ class App : VelworksApp
 {
     
     // TODO: Standart Resource System (Basic Shaders, Basic Meshes)
+    // Look into DefaultECS's Resource System
     #region BOILERPLATE
 
     static Mesh ExampleMesh(GraphicsDevice gd)

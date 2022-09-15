@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="DefaultEcs" Version="0.17.2" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
     <PackageReference Include="Veldrid" Version="4.8.0" />
     <PackageReference Include="Veldrid.Sdl2" Version="4.8.0" />
     <PackageReference Include="Veldrid.SPIRV" Version="1.0.14" />
