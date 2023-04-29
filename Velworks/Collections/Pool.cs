@@ -10,15 +10,15 @@ namespace Velworks.Collections;
 public class Pool<T>
 {
     private readonly ConcurrentBag <T> bag = new();
-    private readonly Func<T> get;
+    private readonly Func<T> getNew;
 
-    public Pool(Func<T> get, int initialAmmount = 0)
+    public Pool(Func<T> getNew, int initialAmmount = 0)
     {
-        this.get = get;
+        this.getNew = getNew;
 
         for (int i = 0; i < initialAmmount; i++)
         {
-            bag.Add(get());
+            bag.Add(getNew());
         }
     }
 
@@ -28,15 +28,15 @@ public class Pool<T>
 
     public T Get()
     {
-        if (bag.IsEmpty)
-            return get();
-        return bag.First();
+        if (bag.TryTake(out var result))
+            return result;
+        
+        return getNew();
     }
 
     public void Return(T item) => bag.Add(item);
 
     public void Clear() => bag.Clear();
     public bool IsCached(T item) => bag.Contains(item);
-
 
 }

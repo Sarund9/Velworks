@@ -7,9 +7,16 @@ VelworksApp.RunApplication<App>();
 
 class App : VelworksApp
 {
-    
+
+    // TODO: Unit Tests
+
+    // TODO: Resource System
     // TODO: Standart Resource System (Basic Shaders, Basic Meshes)
-    // Look into DefaultECS's Resource System
+
+    // TODO: Custom ECS
+
+    // 
+
     #region BOILERPLATE
 
     static Mesh ExampleMesh(GraphicsDevice gd)

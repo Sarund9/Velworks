@@ -160,23 +160,20 @@ public struct GpuVertex
         return self;
     }
 
-    public static GpuVertex AtPos(float x, float y, float z) =>
-        new GpuVertex
+    public static GpuVertex AtPos(float x, float y, float z) => new()
         {
             color = RgbaFloat.White,
             position = new Vector3(x, y, z),
             normal = Vector3.UnitZ,
         };
-    public static GpuVertex AtPos(Vector3 pos) =>
-        new GpuVertex
+    public static GpuVertex AtPos(Vector3 pos) => new()
         {
             color = RgbaFloat.White,
             position = pos,
             normal = Vector3.UnitZ,
         };
 
-    public static VertexLayoutDescription Layout() =>
-        new VertexLayoutDescription(
+    public static VertexLayoutDescription Layout() => new(
             new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
             new VertexElementDescription("Normal", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float3),
             new VertexElementDescription("Color", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float4)

@@ -10,10 +10,9 @@ namespace Velworks.Collections
         where TKey : notnull
     {
 
-        Dictionary<TKey, TResult> cache = new Dictionary<TKey, TResult>();
-        Func<TKey, TResult> get;
-        
-        ValueMemento<TKey> values;
+        readonly Dictionary<TKey, TResult> cache = new();
+        readonly Func<TKey, TResult> get;
+        readonly ValueMemento<TKey> values;
 
         public HashCache(Func<TKey, TResult> get, int maxCap)
         {
@@ -54,7 +53,7 @@ namespace Velworks.Collections
 
     public class ValueMemento<T>
     {
-        Queue<T> queue = new Queue<T>();
+        Queue<T> queue = new();
         int capacity;
 
         public ValueMemento(int capacity)

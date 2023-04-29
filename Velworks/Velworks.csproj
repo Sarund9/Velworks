@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Folder Include="IO\" />
+    <Folder Include="ECS\" />
   </ItemGroup>
 
 </Project>
